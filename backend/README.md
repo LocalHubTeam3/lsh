@@ -92,7 +92,7 @@ cd C:\Users\SSAFY\Desktop\team_proj\backend
 .\.venv\Scripts\python.exe -m pytest -v
 ```
 
-외부 API를 사용할 때 `.env`에 `SEOUL_API_KEY`와 `OPENAI_API_KEY`를 설정합니다. 혼잡도는 서울시 공식 웹페이지가 사용하는 HTTPS API를 먼저 호출하고, 이 요청이 실패하면 `SEOUL_API_KEY`를 사용하는 8088 OpenAPI로 재시도합니다. 배포 시 시작 명령은 `uvicorn app.main:app --host 0.0.0.0 --port $PORT`입니다. Render의 비영구 파일 시스템에서는 SQLite로 생성한 게시글과 코스가 재배포 시 사라질 수 있습니다.
+외부 API를 사용할 때 `.env`에 `SEOUL_API_KEY`와 `OPENAI_API_KEY`를 설정합니다. AI 모델은 `OPENAI_MODEL`로 변경할 수 있으며 기본값은 `gpt-5-mini`입니다. 혼잡도는 서울시 공식 웹페이지가 사용하는 HTTPS API를 먼저 호출하고, 이 요청이 실패하면 `SEOUL_API_KEY`를 사용하는 8088 OpenAPI로 재시도합니다. 배포 시 시작 명령은 `uvicorn app.main:app --host 0.0.0.0 --port $PORT`입니다. Render의 비영구 파일 시스템에서는 SQLite로 생성한 게시글과 코스가 재배포 시 사라질 수 있습니다.
 
 키가 없는 상태에서도 장소 목록과 지도는 정상 동작합니다. 서울시 HTTPS API가 정상이라면 `SEOUL_API_KEY` 없이도 혼잡도가 표시됩니다. HTTPS API가 실패하고 fallback 키도 없을 때는 `서울시 API 키를 적어야 해요.`가 표시됩니다. 챗봇 키가 없으면 `OpenAI API 키를 적어야 해요.` 안내로 대체됩니다.
 
@@ -113,6 +113,7 @@ cd C:\Users\SSAFY\Desktop\team_proj\backend
 - `GET|POST /api/posts`, `GET|PUT|DELETE /api/posts/{id}`
 - `GET|POST /api/courses`, `GET|PUT|DELETE /api/courses/{id}`
 - `POST /api/chat`
+- `POST /api/ai/travel-basket-feedback` (`location_ids`와 선택적인 `request`로 여행 바구니 피드백 생성)
 
 게시글과 코스의 편집 비밀번호는 교육용 명세에 따라 평문 저장하지만 API 응답, 로그, 챗봇 문맥에는 포함하지 않습니다.
 

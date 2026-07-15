@@ -17,9 +17,13 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
     ]
     openai_api_key: str = ""
-    openai_model: str = "gpt-4o-mini"
+    openai_model: str = "gpt-5-mini"
     seoul_api_key: str = ""
+    kma_service_key: str = ""
+    kma_short_service_key: str = ""
+    kma_mid_service_key: str = ""
     external_api_timeout: float = 10.0
+    openai_timeout: float = 45.0
 
     model_config = SettingsConfigDict(env_file=BASE_DIR / ".env", extra="ignore")
 

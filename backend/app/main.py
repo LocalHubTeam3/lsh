@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.database import init_db
-from app.routers import chat, courses, health, locations, map_locations, posts
+from app.routers import ai_feedback, chat, courses, health, locations, map_locations, posts, weather
 
 
 @asynccontextmanager
@@ -29,6 +29,8 @@ app.include_router(map_locations.router)
 app.include_router(posts.router)
 app.include_router(courses.router)
 app.include_router(chat.router)
+app.include_router(ai_feedback.router)
+app.include_router(weather.router)
 
 
 @app.get("/", include_in_schema=False)
