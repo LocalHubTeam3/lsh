@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { ArrowLeft, CalendarDays, Eye, MapPin, Pencil, Trash2, UserRound } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
-import { deletePost, getPost } from '../api/posts'
+import { deletePost, getPost, increasePostView } from '../api/posts'
 import StatePanel from '../components/common/StatePanel.vue'
 
 const route = useRoute()
@@ -21,9 +21,21 @@ function formatDate(value) {
 
 async function load() {
   loading.value = true; error.value = ''
-  try { post.value = await getPost(route.params.id) }
+  try { post.value = await getPost(route.params.id); await countViewOnce(post.value) }
   catch (err) { error.value = err.message }
   finally { loading.value = false }
+}
+
+async function countViewOnce(value) {
+  const key = `post-viewed-${value.id}`
+  try {
+    if (localStorage.getItem(key)) return
+    const result = await increasePostView(value.id)
+    localStorage.setItem(key, String(Date.now()))
+    value.views = result.views
+  } catch (err) {
+    if (err?.name !== 'SecurityError') console.warn('게시글 조회수를 기록하지 못했습니다.', err)
+  }
 }
 
 async function remove() {

@@ -28,6 +28,14 @@ def require_post(db: Session, post_id: int) -> Post:
     return post
 
 
+def increase_post_view(db: Session, post_id: int) -> int:
+    post = require_post(db, post_id)
+    post.views += 1
+    db.commit()
+    db.refresh(post)
+    return post.views
+
+
 def create_post(db: Session, data: PostCreate) -> Post:
     if data.location_id is not None and db.get(Location, data.location_id) is None:
         raise HTTPException(400, "존재하지 않는 장소입니다.")

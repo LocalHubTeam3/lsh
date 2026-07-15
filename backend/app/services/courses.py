@@ -28,6 +28,14 @@ def require_course(db: Session, course_id: int) -> Course:
     return course
 
 
+def increase_course_view(db: Session, course_id: int) -> int:
+    course = require_course(db, course_id)
+    course.views += 1
+    db.commit()
+    db.refresh(course)
+    return course.views
+
+
 def create_course(db: Session, data: CourseCreate) -> Course:
     _validate_locations(db, data.location_ids)
     course = Course(title=data.title, description=data.description, edit_password=data.password)

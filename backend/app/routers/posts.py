@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.schemas.post import PasswordRequest, PostCreate, PostList, PostOut, PostUpdate
+from app.schemas.post import PasswordRequest, PostCreate, PostList, PostOut, PostUpdate, PostViewCount
 from app.services import posts as service
 
 router = APIRouter(prefix="/api/posts", tags=["posts"])
@@ -18,13 +18,17 @@ def list_posts(search: str | None = None, category: str | None = None, location_
 
 @router.get("/{post_id}", response_model=PostOut)
 def get_post(post_id: int, db: Session = Depends(get_db)) -> PostOut:
-    post = service.require_post(db, post_id); post.views += 1; db.commit(); db.refresh(post)
-    return PostOut.model_validate(post)
+    return PostOut.model_validate(service.require_post(db, post_id))
 
 
 @router.post("", response_model=PostOut, status_code=status.HTTP_201_CREATED)
 def create_post(data: PostCreate, db: Session = Depends(get_db)) -> PostOut:
     return PostOut.model_validate(service.create_post(db, data))
+
+
+@router.post("/{post_id}/view", response_model=PostViewCount)
+def increase_post_view(post_id: int, db: Session = Depends(get_db)) -> PostViewCount:
+    return PostViewCount(views=service.increase_post_view(db, post_id))
 
 
 @router.put("/{post_id}", response_model=PostOut)

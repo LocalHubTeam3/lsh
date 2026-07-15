@@ -40,3 +40,7 @@ class PostList(BaseModel):
     page: int
     size: int
     total: int
+
+
+class PostViewCount(BaseModel):
+    views: int

@@ -35,7 +35,6 @@ const cartNotice = ref('')
 const saveOpen = ref(false)
 const saving = ref(false)
 const saveError = ref('')
-const savedCourse = ref(null)
 const aiFeedback = ref(null)
 const aiFeedbackError = ref('')
 const aiFeedbackLoading = ref(false)
@@ -200,7 +199,7 @@ function updateCartRoute() {
   const points = places.map((place) => [Number(place.latitude), Number(place.longitude)])
   if (points.length >= 2) {
     L.polyline(points, { color: '#ffffff', weight: 8, opacity: .92, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(cartRouteLayer)
-    L.polyline(points, { color: '#087f68', weight: 4, opacity: .95, dashArray: '9 7', lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(cartRouteLayer)
+    L.polyline(points, { color: '#267d78', weight: 4, opacity: .95, dashArray: '9 7', lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(cartRouteLayer)
   }
   places.forEach((place) => {
     const order = cart.value.findIndex((item) => item.id === place.id) + 1
@@ -321,8 +320,8 @@ function dropOnCart(event) {
   } catch { cartNotice.value = '장소를 담지 못했어요.' }
 }
 
-function removeSpot(index) { cart.value.splice(index, 1); savedCourse.value = null; if (!cart.value.length) cartOpen.value = false }
-function clearCart() { cart.value = []; cartOpen.value = false; saveOpen.value = false; cartNotice.value = ''; savedCourse.value = null }
+function removeSpot(index) { cart.value.splice(index, 1); if (!cart.value.length) cartOpen.value = false }
+function clearCart() { cart.value = []; cartOpen.value = false; saveOpen.value = false; cartNotice.value = '' }
 
 function handleMapBackgroundClick(event) {
   if (event.sourceTarget === map) cartOpen.value = false
@@ -375,19 +374,17 @@ function applyRecommendedRoute() {
 
 async function saveCourse() {
   saveError.value = ''
-  savedCourse.value = null
   if (cart.value.length < 2) { saveError.value = '코스에는 장소가 2곳 이상 필요합니다.'; return }
   saving.value = true
   try {
-    savedCourse.value = await createCourse({
+    await createCourse({
       title: courseForm.title.trim(),
       description: courseForm.description.trim(),
       password: courseForm.password,
       location_ids: cart.value.map((place) => place.id),
     })
-    cartNotice.value = `“${savedCourse.value.title}” 코스를 저장했어요.`
     courseForm.title = ''; courseForm.description = ''; courseForm.password = ''
-    saveOpen.value = false
+    clearCart()
   } catch (err) { saveError.value = err.message }
   finally { saving.value = false }
 }
@@ -398,7 +395,7 @@ function markerFor(place, type, radius = 5) {
   const height = highlighted ? 50 : 42
   const icon = L.divIcon({
     className: `spot-map-marker${highlighted ? ' highlighted' : ''}`,
-    html: `<span class="spot-pin" style="--marker-color:${type.color}" aria-hidden="true"><i></i></span>`,
+    html: `<span class="spot-pin" style="--marker-color:${type.color}" aria-hidden="true"><i>${type.symbol}</i></span>`,
     iconSize: [size, height],
     iconAnchor: [size / 2, height - 2],
   })
@@ -409,6 +406,14 @@ function markerFor(place, type, radius = 5) {
     title: `${place.title} · ${type.name}`,
     riseOnHover: true,
   }).on('click', () => selectPlace(place))
+}
+
+function crowdTone(level = '') {
+  if (level.includes('여유')) return 'relaxed'
+  if (level.includes('약간') || level.includes('다소')) return 'busy'
+  if (level.includes('혼잡') || level.includes('붐빔')) return 'crowded'
+  if (level.includes('보통')) return 'normal'
+  return ''
 }
 
 async function toggleType(type) {
@@ -557,7 +562,7 @@ onBeforeUnmount(() => {
       <div class="category-list">
         <label v-for="type in LOCATION_TYPES" :key="type.id">
           <input type="checkbox" :checked="selectedTypes.includes(type.id)" @change="handleType(type)" />
-          <i :style="{ background: type.color }"></i><span>{{ type.name }}</span><small>{{ counts[type.id] != null ? `${counts[type.id].toLocaleString('ko-KR')}곳` : '' }}</small>
+          <i :style="{ background: type.color }" aria-hidden="true">{{ type.symbol }}</i><span>{{ type.name }}</span><small>{{ counts[type.id] != null ? `${counts[type.id].toLocaleString('ko-KR')}곳` : '' }}</small>
         </label>
       </div>
       <p v-if="message" class="map-message">{{ message }}</p>
@@ -584,7 +589,7 @@ onBeforeUnmount(() => {
               <GripVertical class="cart-grip" :size="17" /><b>{{ index + 1 }}</b><button class="cart-place" type="button" @click="selectPlace(place)"><strong>{{ place.title }}</strong><small>{{ place.address || locationType(place.content_type_id).name }}</small></button><button class="remove-spot" type="button" :aria-label="`${place.title} 빼기`" @click="removeSpot(index)"><X :size="15" /></button>
             </li>
           </ol>
-          <p v-if="cartNotice" class="cart-notice" role="status">{{ cartNotice }} <RouterLink v-if="savedCourse" :to="`/courses/${savedCourse.id}`">저장한 코스 보기</RouterLink></p>
+          <p v-if="cartNotice" class="cart-notice" role="status">{{ cartNotice }}</p>
           <div class="cart-actions">
             <button class="button ghost" type="button" @click="clearCart"><Trash2 :size="15" />비우기</button>
             <div class="cart-action-group">
@@ -636,7 +641,7 @@ onBeforeUnmount(() => {
         <span class="badge">{{ locationType(selected.content_type_id).name }}</span>
         <h2>{{ selected.title }}</h2>
         <p><MapPin :size="15" />{{ selected.address || '주소 정보 없음' }}</p>
-        <div :class="['crowd', { active: crowd?.available }]">
+        <div :class="['crowd', { active: crowd?.available }, crowdTone(crowd?.congestion_level)]">
           <span>실시간 혼잡도</span>
           <strong v-if="crowd?.available">{{ crowd.congestion_level }} <small v-if="crowd.population_estimate">· 약 {{ crowd.population_estimate.toLocaleString('ko-KR') }}명</small></strong>
           <strong v-else>{{ crowdMessage }}</strong>
@@ -650,14 +655,14 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .map-workspace { position: relative; height: calc(100vh - var(--header-height)); min-height: 600px; overflow: hidden; }
-.map-canvas { width: 100%; height: 100%; background: #dfe7e3; }
+.map-canvas { width: 100%; height: 100%; background: #e7e3da; }
 :deep(.course-order-marker) { border: 0; background: transparent; }
-:deep(.course-order-marker span) { display: grid; width: 32px; height: 32px; place-items: center; border: 3px solid #fff; border-radius: 50%; color: #fff; background: var(--marker-color, var(--color-primary)); box-shadow: 0 4px 12px rgba(6,99,81,.38); font-size: 12px; font-weight: 900; }
+:deep(.course-order-marker span) { display: grid; width: 32px; height: 32px; place-items: center; border: 3px solid #fff; border-radius: 50%; color: #fff; background: var(--marker-color, var(--color-primary)); box-shadow: 0 4px 12px rgba(23,59,79,.32); font-size: 12px; font-weight: 900; }
 :deep(.spot-map-marker) { border: 0; background: transparent; filter: drop-shadow(0 4px 5px rgba(20,43,35,.28)); }
 :deep(.spot-map-marker .spot-pin) { position: absolute; top: 2px; left: 50%; display: grid; width: 26px; height: 26px; place-items: center; border: 3px solid #fff; border-radius: 50% 50% 50% 8px; background: var(--marker-color); transform: translateX(-50%) rotate(-45deg); transition: transform .16s ease, filter .16s ease; }
-:deep(.spot-map-marker .spot-pin i) { display: block; width: 8px; height: 8px; border: 2px solid rgba(255,255,255,.92); border-radius: 50%; background: rgba(255,255,255,.28); }
+:deep(.spot-map-marker .spot-pin i) { display: grid; width: 16px; height: 16px; place-items: center; color: #fff; font-size: 8px; font-style: normal; font-weight: 900; transform: rotate(45deg); }
 :deep(.spot-map-marker.highlighted .spot-pin) { width: 32px; height: 32px; border-width: 4px; }
-:deep(.spot-map-marker.highlighted .spot-pin i) { width: 10px; height: 10px; background: #fff; }
+:deep(.spot-map-marker.highlighted .spot-pin i) { width: 18px; height: 18px; font-size: 9px; }
 :deep(.spot-map-marker:hover .spot-pin), :deep(.spot-map-marker:focus .spot-pin), :deep(.spot-map-marker:focus-within .spot-pin) { filter: brightness(1.08) saturate(1.08); transform: translateX(-50%) translateY(-4px) rotate(-45deg) scale(1.08); }
 .trip-planner { position: absolute; z-index: 480; top: 20px; left: 360px; width: min(50vw, 760px, calc(100% - 380px)); overflow: hidden; padding: 8px 10px; background: rgba(255,255,255,.97); box-shadow: var(--shadow-lg); backdrop-filter: blur(12px); }.trip-controls { display: flex; align-items: center; gap: 8px; }.trip-title { display: flex; flex: 0 0 auto; align-items: center; gap: 6px; }.trip-title > span { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 7px; color: var(--color-primary-dark); background: var(--color-primary-soft); }.trip-title > div { display: grid; gap: 1px; }.trip-title strong { font-size: 14px; }.trip-title small { display: none; }.date-range { display: flex; flex: 0 0 auto; align-items: end; gap: 4px; }.date-range label { display: grid; gap: 1px; color: var(--color-muted); font-size: 10px; font-weight: 700; }.date-range input { width: 112px; height: 31px; padding: 0 5px; border: 1px solid var(--color-line); border-radius: 5px; color: var(--color-text); background: #fff; font-size: 11px; }.date-range i { padding-bottom: 8px; color: var(--color-muted); font-size: 12px; font-style: normal; }.date-message { margin: 4px 0 0; color: var(--color-warning); font-size: 10px; text-align: right; }.date-tabs { display: flex; min-width: 190px; max-width: 310px; flex: 1; gap: 3px; overflow-x: auto; scrollbar-width: thin; }.date-tabs button { display: grid; min-height: 34px; flex: 0 0 76px; place-items: center; align-content: center; gap: 1px; padding: 2px; border: 1px solid var(--color-line); border-radius: 5px; color: var(--color-muted); background: #fff; }.date-tabs button strong { font-size: 11px; }.date-tabs button small { font-size: 9px; }.date-tabs button.active { border-color: var(--color-primary); color: #fff; background: var(--color-primary); box-shadow: 0 3px 8px rgba(8,127,104,.16); }.trip-weather { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--color-line); }.weather-card { display: flex; width: 100%; min-width: 0; min-height: 52px; align-items: center; gap: 12px; padding: 7px 10px; border-radius: 5px; color: var(--color-primary-dark); background: var(--color-primary-soft); }.weather-card > svg { width: 22px; height: 22px; flex: 0 0 auto; }.weather-summary { display: grid; min-width: 120px; gap: 2px; }.weather-summary small { color: var(--color-muted); font-size: 10px; }.weather-summary strong { font-size: 13px; }.weather-metrics { display: flex; min-width: 0; flex: 1; justify-content: flex-end; gap: 8px; }.weather-card button { margin-left: auto; padding: 5px 8px; border: 1px solid currentColor; border-radius: 5px; color: var(--color-danger); background: #fff; font-size: 10px; font-weight: 800; }.weather-card.error { color: var(--color-danger); background: #fff1f1; }.weather-error { overflow: hidden; margin: 4px 2px 0; color: var(--color-danger); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .map-sidebar { position: absolute; z-index: 500; top: 20px; bottom: 20px; left: 20px; display: flex; width: 320px; flex-direction: column; overflow: hidden; padding: 20px; border: 1px solid var(--color-line); border-radius: 8px; background: rgba(255,255,255,.97); box-shadow: var(--shadow-lg); }
@@ -672,9 +677,11 @@ onBeforeUnmount(() => {
 .search-results button { display: flex; width: 100%; align-items: center; gap: 6px; padding: 10px 9px 10px 5px; border: 0; border-top: 1px solid var(--color-line); text-align: left; background: #fff; cursor: grab; }
 .search-results button:active { cursor: grabbing; }.search-results button:hover { background: var(--color-surface-soft); }.result-grip { display: grid; flex: 0 0 auto; place-items: center; color: #9aa7a1; }.result-copy { display: grid; min-width: 0; flex: 1; gap: 3px; }.result-copy strong, .result-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.result-copy small { color: var(--color-muted); font-size: 11px; }
 .category-head { display: flex; justify-content: space-between; margin: 22px 0 10px; font-size: 13px; }.category-head span { color: var(--color-muted); font-size: 11px; }
-.category-list { display: grid; }
-.category-list label { display: flex; min-height: 46px; align-items: center; gap: 10px; border-bottom: 1px solid var(--color-line); cursor: pointer; font-size: 13px; }
-.category-list input { accent-color: var(--color-primary); }.category-list i { width: 8px; height: 8px; border-radius: 50%; }.category-list span { font-weight: 700; }.category-list small { margin-left: auto; color: var(--color-muted); }
+.category-list { display: grid; gap: 6px; }
+.category-list label { display: flex; min-height: 40px; align-items: center; gap: 9px; padding: 0 10px; border: 1px solid var(--color-line); border-radius: 7px; color: #505458; background: var(--color-surface); cursor: pointer; font-size: 12px; transition: .16s ease; }
+.category-list label:hover { border-color: #b9d4d1; color: var(--color-primary-hover); background: #e5f0ee; }
+.category-list label:has(input:checked) { border-color: var(--color-primary); color: #fff; background: var(--color-primary); }
+.category-list input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }.category-list i { display: grid; width: 22px; height: 22px; flex: 0 0 auto; place-items: center; border: 2px solid rgba(255,255,255,.85); border-radius: 50%; color: #fff; font-size: 8px; font-style: normal; font-weight: 900; }.category-list span { font-weight: 700; }.category-list small { margin-left: auto; color: inherit; opacity: .75; }
 .map-message { margin-top: 12px; padding: 10px; border-radius: 6px; color: var(--color-primary-dark); background: var(--color-primary-soft); font-size: 12px; line-height: 1.5; }
 .interaction-guide { display: grid; gap: 7px; margin-top: 14px; padding: 11px; border-radius: 6px; color: var(--color-muted); background: #f3f6f4; font-size: 10px; }.interaction-guide span { display: flex; align-items: center; gap: 5px; }.interaction-guide strong { color: var(--color-text); }.click-mark { width: 10px; height: 10px; border: 2px solid #fff; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
 .back-list { display: flex; align-items: center; gap: 4px; margin-top: 18px; color: var(--color-primary); font-size: 12px; font-weight: 800; }
@@ -689,15 +696,27 @@ onBeforeUnmount(() => {
 .popup-drag-guide { position: absolute; z-index: 2; top: 10px; left: 10px; display: flex; align-items: center; gap: 4px; padding: 6px 9px; border-radius: 999px; color: #fff; background: rgba(23,33,29,.78); font-size: 9px; font-weight: 800; backdrop-filter: blur(5px); pointer-events: none; }
 .sheet-image { display: grid; min-height: 245px; place-items: center; color: var(--color-muted); background: #e7eeea; }.sheet-image img { width: 100%; height: 100%; object-fit: cover; }
 .sheet-copy { padding: 24px 22px; }.sheet-copy h2 { margin: 10px 34px 7px 0; font-size: 23px; }.sheet-copy > p { display: flex; gap: 5px; color: var(--color-muted); font-size: 12px; line-height: 1.5; }
-.crowd { display: grid; gap: 4px; margin: 17px 0; padding: 10px 12px; border-radius: 6px; color: var(--color-muted); background: #f2f4f3; font-size: 11px; }.crowd strong { font-size: 12px; }.crowd.active { color: var(--color-primary-dark); background: var(--color-primary-soft); }
+.crowd { display: grid; gap: 4px; margin: 17px 0; padding: 10px 12px; border-left: 4px solid var(--color-line); border-radius: 6px; color: var(--color-muted); background: #f4f1eb; font-size: 11px; }.crowd strong { font-size: 12px; }.crowd.active strong::before { margin-right: 5px; }.crowd.relaxed { border-color: var(--color-success); color: #28634d; background: #e8f3ed; }.crowd.relaxed strong::before { content: '●'; }.crowd.normal { border-color: var(--color-warning); color: #755814; background: #fbf3dc; }.crowd.normal strong::before { content: '●'; }.crowd.busy { border-color: var(--color-orange); color: #914a23; background: #fbeade; }.crowd.busy strong::before { content: '▲'; }.crowd.crowded { border-color: var(--color-danger); color: #963d39; background: #fae7e4; }.crowd.crowded strong::before { content: '!'; }
 .sheet-actions { display: flex; gap: 6px; }.sheet-actions .button { flex: 1; padding-inline: 8px; font-size: 11px; }.add-mobile { display: none; }.drag-spot { display: flex; width: 100%; align-items: center; gap: 7px; margin-top: 9px; padding: 8px; border: 1px dashed #a9c8bd; border-radius: 6px; color: var(--color-primary-dark); text-align: left; background: #f3faf7; }.drag-spot > svg { flex: 0 0 auto; }.drag-spot span { display: grid; gap: 2px; }.drag-spot strong { font-size: 10px; }.drag-spot small { color: var(--color-muted); font-size: 8px; }
 .mobile-filter-button { display: none; position: absolute; z-index: 450; top: 12px; left: 12px; }
-.ai-feedback-panel { position: absolute; z-index: 660; display: grid; min-width: 0; min-height: 0; align-content: start; gap: 10px; overflow-y: auto; padding: 14px; border: 1px solid #dcd2f5; border-radius: 12px; background: rgba(250,248,255,.98); box-shadow: 0 18px 50px rgba(50,35,92,.22); backdrop-filter: blur(12px); }
+.ai-feedback-panel { position: absolute; z-index: 660; display: grid; min-width: 0; min-height: 0; align-content: start; gap: 10px; overflow-y: auto; padding: 14px; border: 1px solid #e8c3bf; border-radius: 12px; background: rgba(255,248,245,.98); box-shadow: 0 18px 50px rgba(23,59,79,.2); backdrop-filter: blur(12px); }
 .ai-feedback-title button { display: grid; margin-left: auto; padding: 5px; border: 0; place-items: center; color: var(--color-muted); background: transparent; }
 .ai-weather-context { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 5px; }
-.ai-weather-context > span { display: grid; min-width: 0; grid-template-columns: auto 1fr; gap: 2px 6px; padding: 7px 8px; border: 1px solid #e5def6; border-radius: 6px; background: #fff; }
-.ai-weather-context b { color: #6046ad; font-size: 9px; }.ai-weather-context small { overflow: hidden; color: var(--color-muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }.ai-weather-context strong { font-size: 10px; }.ai-weather-context em { color: var(--color-muted); font-size: 8px; font-style: normal; text-align: right; }
-.ai-feedback-loading { display: flex; min-height: 90px; align-items: center; justify-content: center; gap: 7px; margin: 0; color: #6046ad; font-size: 11px; }
+.ai-weather-context > span { display: grid; min-width: 0; grid-template-columns: auto 1fr; gap: 2px 6px; padding: 7px 8px; border: 1px solid #ead5cf; border-radius: 6px; background: var(--color-surface); }
+.ai-weather-context b { color: var(--color-secondary); font-size: 9px; }.ai-weather-context small { overflow: hidden; color: var(--color-muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }.ai-weather-context strong { font-size: 10px; }.ai-weather-context em { color: var(--color-muted); font-size: 8px; font-style: normal; text-align: right; }
+.ai-feedback-loading { display: flex; min-height: 90px; align-items: center; justify-content: center; gap: 7px; margin: 0; color: var(--color-secondary); font-size: 11px; }
+
+/* AI feedback follows the same seal-red and yuzu accent palette as the app. */
+.ai-button { border-color: var(--color-secondary); color: var(--color-secondary); background: #fff5f3; }
+.ai-button:hover:not(:disabled) { color: #fff; background: var(--color-secondary); }
+.ai-feedback { border-color: transparent; background: #fff8f5; }
+.ai-feedback-title span { color: var(--color-secondary); background: #f4dfdb; }
+.route-comparison i { color: var(--color-accent); }
+.route-comparison > b { color: #755814; background: #fbf3dc; }
+.route-legs b, .recommended-order li::before { color: var(--color-secondary); }
+.recommended-order li { border-color: transparent; }
+.ai-apply { background: var(--color-secondary); }
+.ai-weather-context b, .ai-feedback-loading { color: var(--color-secondary); }
 @media (max-width: 800px) {
   .map-sidebar { top: 0; bottom: 0; left: 0; width: min(360px, 88vw); border-radius: 0; transform: translateX(-105%); transition: transform .22s ease; }.map-sidebar.mobileOpen { transform: translateX(0); }
   .mobile-filter-button, .mobile-close { display: grid; place-items: center; }

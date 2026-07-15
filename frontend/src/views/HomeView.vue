@@ -73,7 +73,7 @@ onMounted(loadFeatured)
 </template>
 
 <style scoped>
-.home-intro { padding: 68px 0 54px; border-bottom: 1px solid var(--color-line); background: #fff; }
+.home-intro { padding: 68px 0 54px; border-bottom: 1px solid var(--color-line); background: linear-gradient(135deg, var(--color-surface) 0%, #f7f3ea 72%, #e8f1ef 100%); }
 .intro-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(340px, .7fr); align-items: center; gap: 70px; }
 .intro-copy h1 { max-width: 700px; margin-bottom: 22px; font-size: clamp(46px, 6vw, 74px); line-height: 1.05; letter-spacing: 0; }
 .intro-copy h1 span { color: var(--color-primary); }
@@ -93,12 +93,12 @@ onMounted(loadFeatured)
 .section-head h2 { margin-bottom: 0; font-size: 30px; }
 .section-head > a { display: flex; align-items: center; gap: 5px; color: var(--color-primary); font-size: 14px; font-weight: 800; }
 .location-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; }
-.service-band { padding: 32px 0; color: #fff; background: #18332c; }
+.service-band { padding: 32px 0; color: #fff; background: var(--color-primary-dark); }
 .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
 .service-grid > div { display: grid; grid-template-columns: 40px 1fr; align-items: center; padding: 4px 28px; border-right: 1px solid rgba(255,255,255,.16); }
 .service-grid > div:last-child { border: 0; }
-.service-grid svg { grid-row: 1 / 3; color: #75d3b9; }
-.service-grid span { color: #b7cac4; font-size: 12px; }
+.service-grid svg { grid-row: 1 / 3; color: #8fc8c2; }
+.service-grid span { color: #c9d7da; font-size: 12px; }
 @media (max-width: 1000px) { .location-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 800px) { .intro-grid { grid-template-columns: 1fr; gap: 38px; } .home-intro { padding-top: 46px; } }
 @media (max-width: 650px) {

@@ -77,7 +77,12 @@ def test_post_crud_password_and_views(client):
     assert created.status_code == 201
     post_id = created.json()["id"]
     assert "edit_password" not in created.text and "password" not in created.json()
-    assert client.get(f"/api/posts/{post_id}").json()["views"] == 1
+    assert client.get(f"/api/posts/{post_id}").json()["views"] == 0
+    assert client.get(f"/api/posts/{post_id}").json()["views"] == 0
+    assert client.post(f"/api/posts/{post_id}/view").json()["views"] == 1
+    assert client.post(f"/api/posts/{post_id}/view").json()["views"] == 2
+    assert client.get(f"/api/posts/{post_id}").json()["views"] == 2
+    assert client.post("/api/posts/99999/view").status_code == 404
     wrong = {**payload, "title": "수정", "password": "wrong"}
     assert client.put(f"/api/posts/{post_id}", json=wrong).status_code == 403
     updated = client.put(f"/api/posts/{post_id}", json={**payload, "title": "수정"})
@@ -110,6 +115,12 @@ def test_course_crud_order_and_validation(client, db):
     assert created.status_code == 201
     course_id = created.json()["id"]
     assert [item["id"] for item in created.json()["locations"]] == ids[:2]
+    assert client.get(f"/api/courses/{course_id}").json()["views"] == 0
+    assert client.get(f"/api/courses/{course_id}").json()["views"] == 0
+    assert client.post(f"/api/courses/{course_id}/view").json()["views"] == 1
+    assert client.post(f"/api/courses/{course_id}/view").json()["views"] == 2
+    assert client.get(f"/api/courses/{course_id}").json()["views"] == 2
+    assert client.post("/api/courses/99999/view").status_code == 404
     changed = {**base, "location_ids": list(reversed(ids[1:])), "description": "변경"}
     updated = client.put(f"/api/courses/{course_id}", json=changed)
     assert [item["id"] for item in updated.json()["locations"]] == list(reversed(ids[1:]))

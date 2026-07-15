@@ -2,7 +2,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ArrowLeft, GripVertical, MapPin, Pencil, Plus, Save, Search, Trash2, X } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
-import { deleteCourse, getCourse, updateCourse } from '../api/courses'
+import { deleteCourse, getCourse, increaseCourseView, updateCourse } from '../api/courses'
 import { getLocations } from '../api/locations'
 import StatePanel from '../components/common/StatePanel.vue'
 
@@ -12,7 +12,18 @@ const form = reactive({ title: '', description: '', password: '', locations: [] 
 const locationQuery = ref(''); const locationResults = ref([]); const locationSearching = ref(false)
 let dragIndex = null
 function fillForm(value) { form.title = value.title; form.description = value.description; form.password = ''; form.locations = [...value.locations] }
-async function load() { loading.value = true; error.value = ''; try { course.value = await getCourse(route.params.id); fillForm(course.value) } catch (err) { error.value = err.message } finally { loading.value = false } }
+async function countViewOnce(value) {
+  const key = `course-viewed-${value.id}`
+  try {
+    if (localStorage.getItem(key)) return
+    const result = await increaseCourseView(value.id)
+    localStorage.setItem(key, String(Date.now()))
+    value.views = result.views
+  } catch (err) {
+    if (err?.name !== 'SecurityError') console.warn('코스 조회수를 기록하지 못했습니다.', err)
+  }
+}
+async function load() { loading.value = true; error.value = ''; try { course.value = await getCourse(route.params.id); fillForm(course.value); await countViewOnce(course.value) } catch (err) { error.value = err.message } finally { loading.value = false } }
 function beginDrag(event, index) { dragIndex = index; event.dataTransfer.effectAllowed = 'move' }
 function reorder(target) { if (dragIndex == null || dragIndex === target) return; const [item] = form.locations.splice(dragIndex, 1); form.locations.splice(target, 0, item); dragIndex = target }
 async function searchLocations() { const keyword = locationQuery.value.trim(); if (!keyword) return; locationSearching.value = true; try { locationResults.value = (await getLocations({ search: keyword, size: 8 })).items.filter((item) => !form.locations.some((place) => place.id === item.id)) } catch (err) { formError.value = err.message } finally { locationSearching.value = false } }

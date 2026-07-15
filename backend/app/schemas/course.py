@@ -36,3 +36,7 @@ class CourseList(BaseModel):
     page: int
     size: int
     total: int
+
+
+class CourseViewCount(BaseModel):
+    views: int

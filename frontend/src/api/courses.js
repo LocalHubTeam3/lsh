@@ -2,6 +2,7 @@ import { request, toQuery } from './client'
 
 export const getCourses = (params = {}) => request(`/api/courses?${toQuery(params)}`)
 export const getCourse = (id) => request(`/api/courses/${id}`)
+export const increaseCourseView = (id) => request(`/api/courses/${id}/view`, { method: 'POST' })
 
 export const createCourse = (payload) => request('/api/courses', {
   method: 'POST',
