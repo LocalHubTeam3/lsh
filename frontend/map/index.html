@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="LocalHub 서울 장소 지도" />
+    <title>LocalHub · 서울 스팟 지도</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <link rel="stylesheet" href="./map.css" />
+    <link rel="stylesheet" href="../shared/chat-widget.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="../">LOCAL<span>HUB</span></a>
+      <div class="title-group">
+        <strong>서울 스팟 지도</strong>
+        <span>JSON 유형을 선택해 지도에서 확인하세요</span>
+      </div>
+      <a class="list-link" href="../">목록 보기</a>
+    </header>
+
+    <main class="map-layout">
+      <aside class="filter-panel" aria-label="JSON 데이터 선택">
+        <div class="panel-heading">
+          <div>
+            <p>DATA LAYERS</p>
+            <h1>표시할 JSON</h1>
+          </div>
+          <button id="toggle-all" type="button">전체 선택</button>
+        </div>
+        <p class="panel-help">체크한 파일의 좌표가 지도에 색상별 spot으로 표시됩니다.</p>
+        <fieldset id="category-list">
+          <legend class="sr-only">JSON 파일 유형</legend>
+        </fieldset>
+        <div class="summary">
+          <span>현재 지도</span>
+          <strong id="spot-count">0개 spot</strong>
+        </div>
+        <div id="load-message" class="load-message" hidden></div>
+        <footer>
+          한국관광공사 TourAPI 4.0 · 공공누리 제3유형<br />
+          지도 © OpenStreetMap contributors
+        </footer>
+      </aside>
+
+      <section class="map-stage" aria-label="서울 장소 지도">
+        <div id="map"></div>
+        <div class="map-search-panel">
+          <form id="map-search-form" class="map-search-form">
+            <span aria-hidden="true">⌕</span>
+            <input id="map-search-input" type="search" maxlength="100" placeholder="장소 이름 검색" autocomplete="off" aria-label="장소 이름 검색" />
+            <button type="submit">검색</button>
+            <button id="map-search-clear" class="search-clear" type="button" aria-label="검색 초기화" hidden>×</button>
+          </form>
+          <div id="map-search-results" class="map-search-results" hidden></div>
+        </div>
+        <div class="map-tip">spot을 누르면 장소 이미지가 열립니다.</div>
+
+        <article id="place-detail" class="place-detail" aria-live="polite" hidden>
+          <button id="detail-close" class="detail-close" type="button" aria-label="상세 정보 닫기">×</button>
+          <div class="detail-image-wrap">
+            <img id="detail-image" alt="" referrerpolicy="no-referrer" />
+            <span id="detail-type"></span>
+          </div>
+          <div class="detail-body">
+            <p id="detail-source"></p>
+            <h2 id="detail-title"></h2>
+            <p id="detail-address"></p>
+            <div id="crowd-status" class="crowd-status">혼잡도 정보를 확인할 수 있습니다.</div>
+            <a id="detail-link" target="_blank" rel="noreferrer">큰 지도에서 보기 ↗</a>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="../config.js"></script>
+    <script src="./map-api.js"></script>
+    <script src="./map.js"></script>
+    <script src="../shared/chat-widget.js"></script>
+  </body>
+</html>

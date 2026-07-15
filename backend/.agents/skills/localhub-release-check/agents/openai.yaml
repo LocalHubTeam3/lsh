@@ -1,0 +1,4 @@
+interface:
+  display_name: "LocalHub Release Check"
+  short_description: "Audit LocalHub before submission or deployment"
+  default_prompt: "Use $localhub-release-check to inspect LocalHub before submission or deployment."

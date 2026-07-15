@@ -1,0 +1,18 @@
+.lh-chat-launcher { z-index: 1400; position: fixed; right: 22px; bottom: 22px; width: 58px; height: 58px; border: 0; border-radius: 50%; color: #173b29; background: #d9f36b; box-shadow: 0 12px 34px rgba(16,41,29,.3); cursor: pointer; font-size: 25px; }
+.lh-chat-panel { z-index: 1400; position: fixed; right: 22px; bottom: 92px; width: min(370px, calc(100vw - 28px)); height: min(540px, calc(100vh - 120px)); overflow: hidden; border: 1px solid rgba(23,59,41,.16); border-radius: 18px; background: #fff; box-shadow: 0 24px 70px rgba(16,41,29,.3); display: grid; grid-template-rows: auto 1fr auto; }
+.lh-chat-panel[hidden] { display: none; }
+.lh-chat-header { padding: 17px 18px; color: white; background: #173b29; display: flex; justify-content: space-between; align-items: center; }
+.lh-chat-header strong { display: block; font-size: 14px; }
+.lh-chat-header span { display: block; margin-top: 3px; color: #aec4b5; font-size: 10px; }
+.lh-chat-close { width: 30px; height: 30px; border: 0; color: white; background: transparent; cursor: pointer; font-size: 22px; }
+.lh-chat-messages { padding: 18px; overflow-y: auto; background: #f7f7f2; display: flex; flex-direction: column; gap: 10px; }
+.lh-chat-message { max-width: 85%; padding: 11px 13px; border-radius: 13px; line-height: 1.5; white-space: pre-wrap; font-size: 12px; }
+.lh-chat-message.bot { align-self: flex-start; border: 1px solid #dce3dd; color: #35473b; background: white; border-bottom-left-radius: 3px; }
+.lh-chat-message.user { align-self: flex-end; color: white; background: #24543b; border-bottom-right-radius: 3px; }
+.lh-chat-message.notice { color: #755316; border-color: #eddaa2; background: #fff5d8; }
+.lh-chat-form { padding: 12px; border-top: 1px solid #e0e4e0; background: white; display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.lh-chat-input { min-width: 0; padding: 11px 12px; border: 1px solid #d6ddd7; border-radius: 10px; outline: none; font: inherit; font-size: 12px; }
+.lh-chat-input:focus { border-color: #557b65; box-shadow: 0 0 0 3px rgba(36,84,59,.09); }
+.lh-chat-send { padding: 0 15px; border: 0; border-radius: 10px; color: white; background: #173b29; cursor: pointer; font-size: 12px; font-weight: 700; }
+.lh-chat-form :disabled { opacity: .48; cursor: not-allowed; }
+@media (max-width: 560px) { .lh-chat-launcher { right: 14px; bottom: 14px; } .lh-chat-panel { right: 14px; bottom: 82px; } }
