@@ -11,8 +11,8 @@ router = APIRouter(prefix="/api/posts", tags=["posts"])
 
 
 @router.get("", response_model=PostList)
-def list_posts(search: str | None = None, category: str | None = None, location_id: int | None = Query(None, ge=1), sort: Literal["latest", "views"] = "latest", page: int = Query(1, ge=1), size: int = Query(20, ge=1, le=100), db: Session = Depends(get_db)) -> PostList:
-    items, total = service.list_posts(db, search, category, location_id, sort, page, size)
+def list_posts(search: str | None = None, search_field: Literal["all", "title", "content", "nickname"] = "all", category: str | None = None, location_id: int | None = Query(None, ge=1), sort: Literal["latest", "views"] = "latest", page: int = Query(1, ge=1), size: int = Query(20, ge=1, le=100), db: Session = Depends(get_db)) -> PostList:
+    items, total = service.list_posts(db, search, search_field, category, location_id, sort, page, size)
     return PostList(items=items, page=page, size=size, total=total)
 
 

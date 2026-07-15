@@ -57,7 +57,7 @@ onMounted(load)
       <header>
         <span class="badge">{{ post.category }}</span>
         <h1>{{ post.title }}</h1>
-        <div class="meta"><span><UserRound :size="15" />익명</span><span><CalendarDays :size="15" />{{ formatDate(post.created_at) }}</span><span><Eye :size="15" />조회 {{ post.views.toLocaleString('ko-KR') }}</span></div>
+        <div class="meta"><span><UserRound :size="15" />{{ post.nickname || '익명' }}</span><span><CalendarDays :size="15" />{{ formatDate(post.created_at) }}</span><span><Eye :size="15" />조회 {{ post.views.toLocaleString('ko-KR') }}</span></div>
       </header>
       <RouterLink v-if="post.location" class="related-place" :to="`/locations/${post.location.id}`"><MapPin :size="19" /><span><small>관련 장소</small><strong>{{ post.location.title }}</strong><em>{{ post.location.address || '주소 정보 없음' }}</em></span></RouterLink>
       <div class="content">{{ post.content }}</div>

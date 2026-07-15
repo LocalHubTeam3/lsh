@@ -66,7 +66,7 @@ onMounted(loadFeatured)
       <div class="container service-grid">
         <div><Database :size="24" /><strong>공공데이터 기반</strong><span>한국관광공사 TourAPI 데이터</span></div>
         <div><Map :size="24" /><strong>지도와 혼잡도</strong><span>위치와 실시간 현황 확인</span></div>
-        <div><MessageCircle :size="24" /><strong>지역 커뮤니티</strong><span>익명으로 나누는 서울 이야기</span></div>
+        <div><MessageCircle :size="24" /><strong>지역 커뮤니티</strong><span>닉네임으로 나누는 서울 이야기</span></div>
       </div>
     </section>
   </div>

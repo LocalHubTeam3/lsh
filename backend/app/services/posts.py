@@ -6,11 +6,17 @@ from app.models import Location, Post
 from app.schemas.post import PostCreate, PostUpdate
 
 
-def list_posts(db: Session, search: str | None, category: str | None, location_id: int | None, sort: str, page: int, size: int):
+def list_posts(db: Session, search: str | None, search_field: str, category: str | None, location_id: int | None, sort: str, page: int, size: int):
     filters = []
     if search:
         pattern = f"%{search}%"
-        filters.append(or_(Post.title.ilike(pattern), Post.content.ilike(pattern)))
+        search_columns = {
+            "title": (Post.title,),
+            "content": (Post.content,),
+            "nickname": (Post.nickname,),
+            "all": (Post.title, Post.content, Post.nickname),
+        }
+        filters.append(or_(*(column.ilike(pattern) for column in search_columns[search_field])))
     if category:
         filters.append(Post.category == category)
     if location_id:
@@ -39,7 +45,7 @@ def increase_post_view(db: Session, post_id: int) -> int:
 def create_post(db: Session, data: PostCreate) -> Post:
     if data.location_id is not None and db.get(Location, data.location_id) is None:
         raise HTTPException(400, "존재하지 않는 장소입니다.")
-    post = Post(category=data.category, title=data.title, content=data.content, edit_password=data.password, location_id=data.location_id)
+    post = Post(category=data.category, nickname=data.nickname, title=data.title, content=data.content, edit_password=data.password, location_id=data.location_id)
     db.add(post); db.commit(); db.refresh(post)
     return post
 
@@ -50,7 +56,7 @@ def update_post(db: Session, post_id: int, data: PostUpdate) -> Post:
         raise HTTPException(403, "비밀번호가 일치하지 않습니다.")
     if data.location_id is not None and db.get(Location, data.location_id) is None:
         raise HTTPException(400, "존재하지 않는 장소입니다.")
-    post.category, post.title, post.content = data.category, data.title, data.content
+    post.category, post.nickname, post.title, post.content = data.category, data.nickname, data.title, data.content
     post.location_id = data.location_id
     db.commit(); db.refresh(post)
     return post

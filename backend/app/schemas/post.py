@@ -7,6 +7,7 @@ from app.schemas.location import LocationOut
 
 class PostCreate(BaseModel):
     category: str = Field(min_length=1, max_length=50)
+    nickname: str = Field(min_length=1, max_length=30)
     title: str = Field(min_length=1, max_length=200)
     content: str = Field(min_length=1, max_length=10000)
     password: str = Field(min_length=1, max_length=100)
@@ -26,6 +27,7 @@ class PostOut(BaseModel):
 
     id: int
     category: str
+    nickname: str
     title: str
     content: str
     views: int

@@ -41,6 +41,7 @@ class Post(TimestampMixin, Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     category: Mapped[str] = mapped_column(String(50), index=True)
+    nickname: Mapped[str] = mapped_column(String(30), default="익명", server_default="익명", index=True)
     title: Mapped[str] = mapped_column(String(200), index=True)
     content: Mapped[str] = mapped_column(Text)
     edit_password: Mapped[str] = mapped_column(String(100))

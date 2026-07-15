@@ -61,7 +61,7 @@ onMounted(load)
     </article>
     <section v-if="place" class="related-section">
       <div class="related-head"><div><p class="eyebrow">LOCAL STORIES</p><h2>이 장소의 커뮤니티 이야기</h2></div><RouterLink :to="`/community?location_id=${place.id}&location=${encodeURIComponent(place.title)}`">전체 보기 <ArrowUpRight :size="16" /></RouterLink></div>
-      <div v-if="relatedPosts.length" class="related-posts"><RouterLink v-for="item in relatedPosts" :key="item.id" class="panel" :to="`/community/${item.id}`"><span class="badge">{{ item.category }}</span><h3>{{ item.title }}</h3><p>{{ item.content }}</p><small><span>익명</span><span><Eye :size="13" />{{ item.views }}</span></small></RouterLink></div>
+      <div v-if="relatedPosts.length" class="related-posts"><RouterLink v-for="item in relatedPosts" :key="item.id" class="panel" :to="`/community/${item.id}`"><span class="badge">{{ item.category }}</span><h3>{{ item.title }}</h3><p>{{ item.content }}</p><small><span>{{ item.nickname || '익명' }}</span><span><Eye :size="13" />{{ item.views }}</span></small></RouterLink></div>
       <div v-else class="no-posts panel"><MessageSquareText :size="25" /><div><strong>아직 연결된 이야기가 없어요.</strong><p>이 장소에 관한 첫 경험이나 질문을 남겨보세요.</p></div><RouterLink class="button secondary" :to="`/community/write?location_id=${place.id}&location=${encodeURIComponent(place.title)}`">글쓰기</RouterLink></div>
     </section>
   </div>

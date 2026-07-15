@@ -47,3 +47,6 @@ def init_db() -> None:
             if "location_id" not in post_columns:
                 connection.exec_driver_sql("ALTER TABLE posts ADD COLUMN location_id INTEGER REFERENCES locations(id)")
                 connection.exec_driver_sql("CREATE INDEX IF NOT EXISTS ix_posts_location_id ON posts (location_id)")
+            if "nickname" not in post_columns:
+                connection.exec_driver_sql("ALTER TABLE posts ADD COLUMN nickname VARCHAR(30) NOT NULL DEFAULT '익명'")
+                connection.exec_driver_sql("CREATE INDEX IF NOT EXISTS ix_posts_nickname ON posts (nickname)")

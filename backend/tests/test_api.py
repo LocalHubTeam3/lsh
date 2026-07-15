@@ -72,10 +72,11 @@ def test_location_search_pagination_and_404(client, db):
 
 
 def test_post_crud_password_and_views(client):
-    payload = {"category": "질문", "title": "서울숲 질문", "content": "어디로 가나요", "password": "1234"}
+    payload = {"category": "질문", "nickname": "서울산책러", "title": "서울숲 질문", "content": "어디로 가나요", "password": "1234"}
     created = client.post("/api/posts", json=payload)
     assert created.status_code == 201
     post_id = created.json()["id"]
+    assert created.json()["nickname"] == "서울산책러"
     assert "edit_password" not in created.text and "password" not in created.json()
     assert client.get(f"/api/posts/{post_id}").json()["views"] == 0
     assert client.get(f"/api/posts/{post_id}").json()["views"] == 0
@@ -93,14 +94,19 @@ def test_post_crud_password_and_views(client):
 
 def test_post_location_relation_and_filters(client, db):
     places = locations(db)
-    first = {"category": "질문", "title": "서울숲 질문", "content": "산책", "password": "1234", "location_id": places[0].id}
-    second = {"category": "후기", "title": "경복궁 후기", "content": "관람", "password": "1234", "location_id": places[1].id}
+    first = {"category": "질문", "nickname": "숲길", "title": "서울숲 질문", "content": "산책", "password": "1234", "location_id": places[0].id}
+    second = {"category": "후기", "nickname": "궁궐지기", "title": "경복궁 후기", "content": "관람", "password": "1234", "location_id": places[1].id}
     created = client.post("/api/posts", json=first)
     assert created.status_code == 201
     assert created.json()["location"]["title"] == "서울숲"
     assert client.post("/api/posts", json={**first, "location_id": 999}).status_code == 400
     assert client.post("/api/posts", json=second).status_code == 201
     assert client.get("/api/posts", params={"category": "질문"}).json()["total"] == 1
+    assert client.get("/api/posts", params={"search": "서울숲", "search_field": "title"}).json()["total"] == 1
+    assert client.get("/api/posts", params={"search": "산책", "search_field": "content"}).json()["total"] == 1
+    assert client.get("/api/posts", params={"search": "궁궐", "search_field": "nickname"}).json()["total"] == 1
+    assert client.get("/api/posts", params={"search": "산책", "search_field": "title"}).json()["total"] == 0
+    assert client.get("/api/posts", params={"search_field": "invalid"}).status_code == 422
     related = client.get("/api/posts", params={"location_id": places[0].id}).json()
     assert related["total"] == 1
     assert related["items"][0]["location_id"] == places[0].id
